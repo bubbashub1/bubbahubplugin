@@ -70,7 +70,7 @@
       var value = text(el.textContent);
       if (!value || !/view\s+details/i.test(value)) return;
       var node = el;
-      for (var i = 0; i < 6 && node && node !== document.body; i++, node = node.parentElement) {
+      for (var i = 0; i < 7 && node && node !== document.body; i++, node = node.parentElement) {
         var title = getCardTitle(node);
         if (title && node.querySelector('button,a')) {
           if (cards.indexOf(node) === -1) cards.push(node);
@@ -87,7 +87,7 @@
     card.setAttribute('data-bh-card-fixed', '1');
     card.classList.add('bubbahub-listing-card');
 
-    var image = item.image || '';
+    var imageUrl = item.image || '';
     var city = item.city || '';
     var region = item.region || '';
     var age = item.ageRange || '';
@@ -95,13 +95,21 @@
     var days = daysFromHours(item.openingHours || item.business_hours || item.timetable);
     var description = text(item.description).replace(/<[^>]+>/g, '');
     var title = text(item.title);
-
     var existingImg = card.querySelector('img');
+
+    var media = document.createElement('div');
+    media.className = 'bubbahub-card-media';
     if (existingImg) {
-      existingImg.style.width = '100%';
-      existingImg.style.height = '100%';
-      existingImg.style.objectFit = 'cover';
-      existingImg.style.display = 'block';
+      existingImg.remove();
+      media.appendChild(existingImg);
+    } else if (imageUrl) {
+      var img = document.createElement('img');
+      img.src = imageUrl;
+      img.alt = title;
+      img.loading = 'lazy';
+      media.appendChild(img);
+    } else {
+      media.innerHTML = '<div class="bubbahub-card-placeholder" aria-hidden="true">BubbaHub</div>';
     }
 
     var body = document.createElement('div');
@@ -122,6 +130,7 @@
       '<a class="bubbahub-card-view" href="' + esc(item.url || '#') + '">View details <span aria-hidden="true">→</span></a>';
 
     card.innerHTML = '';
+    card.appendChild(media);
     card.appendChild(body);
   }
 
