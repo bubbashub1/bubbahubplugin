@@ -3,17 +3,18 @@
  * Plugin Name: BubbaHub App
  * Plugin URI: https://bubbahub.co.uk
  * Description: BubbaHub Figma frontend with a native WordPress backend. WordPress stores listings, events and user data; Google Sheets is an import/sync source only.
- * Version: 1.3.0
+ * Version: 1.3.1
  * Author: BubbaHub
  * License: GPL-2.0+
  * Requires at least: 6.4
  * Requires PHP: 8.0
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
-if ( ! defined( 'BUBBAHUB_APP_VERSION' ) ) define( 'BUBBAHUB_APP_VERSION', '1.3.0' );
+if ( ! defined( 'BUBBAHUB_APP_VERSION' ) ) define( 'BUBBAHUB_APP_VERSION', '1.3.1' );
 if ( ! defined( 'BUBBAHUB_APP_DIR' ) ) define( 'BUBBAHUB_APP_DIR', plugin_dir_path( __FILE__ ) );
 if ( ! defined( 'BUBBAHUB_APP_URL' ) ) define( 'BUBBAHUB_APP_URL', plugin_dir_url( __FILE__ ) );
 require_once BUBBAHUB_APP_DIR . 'includes/class-bubbahub-backend.php';
+require_once BUBBAHUB_APP_DIR . 'includes/class-bubbahub-meta.php';
 register_activation_hook( __FILE__, array( 'BubbaHubPlugin_Backend', 'activate' ) );
 register_deactivation_hook( __FILE__, array( 'BubbaHubPlugin_Backend', 'deactivate' ) );
 function bubbahub_app_enqueue_assets_130() {
