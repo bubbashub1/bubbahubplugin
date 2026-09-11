@@ -21,18 +21,28 @@
     return options;
   }
 
+  function isGoogleListingsRequest(url) {
+    try {
+      var absolute = new URL(url, window.location.href).href;
+      return absolute.indexOf(googleUrl) === 0;
+    } catch (e) {
+      return String(url || '').indexOf(googleUrl) === 0;
+    }
+  }
+
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || '';
 
-    if (url !== googleUrl) {
+    // The Figma build can append query parameters to the Apps Script URL.
+    // Match the URL prefix so those requests are also redirected to WordPress.
+    if (!isGoogleListingsRequest(url)) {
       return nativeFetch(input, init);
     }
 
     var options = cloneRequestOptions(init);
 
-    // Keep the Figma app's original Google-Sheets response contract while
-    // WordPress becomes the actual data source. The old app expects JSON
-    // rather than a raw WordPress REST array, so normalise the response here.
+    // WordPress is the live source of truth. Keep the original Figma
+    // response contract so the existing UI does not need to be rebuilt.
     return nativeFetch(wpUrl, options).then(function (response) {
       if (!response || typeof response.clone !== 'function') return response;
 
@@ -42,10 +52,11 @@
       if (contentType.indexOf('application/json') === -1) return response;
 
       return response.clone().json().then(function (payload) {
-        var data = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.data) ? payload.data : null);
+        var data = Array.isArray(payload)
+          ? payload
+          : (payload && Array.isArray(payload.data) ? payload.data : null);
         if (!data) return response;
 
-        // Support common response shapes used by the existing Figma app.
         var wrapped = Object.assign({}, payload && !Array.isArray(payload) ? payload : {}, {
           data: data,
           listings: data,
