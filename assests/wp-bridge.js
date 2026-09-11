@@ -10,6 +10,17 @@
 
   var nativeFetch = window.fetch.bind(window);
 
+  function cloneRequestOptions(init) {
+    var options = Object.assign({}, init || {});
+    options.credentials = 'same-origin';
+    options.headers = Object.assign({}, options.headers || {});
+    if (wpNonce) options.headers['X-WP-Nonce'] = wpNonce;
+    if (options.method && String(options.method).toUpperCase() === 'POST') {
+      options.headers['Content-Type'] = 'application/json';
+    }
+    return options;
+  }
+
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || '';
 
@@ -17,15 +28,39 @@
       return nativeFetch(input, init);
     }
 
-    var options = Object.assign({}, init || {});
-    options.credentials = 'same-origin';
-    options.headers = Object.assign({}, options.headers || {});
+    var options = cloneRequestOptions(init);
 
-    if (wpNonce) options.headers['X-WP-Nonce'] = wpNonce;
-    if (options.method && String(options.method).toUpperCase() === 'POST') {
-      options.headers['Content-Type'] = 'application/json';
-    }
+    // Keep the Figma app's original Google-Sheets response contract while
+    // WordPress becomes the actual data source. The old app expects JSON
+    // rather than a raw WordPress REST array, so normalise the response here.
+    return nativeFetch(wpUrl, options).then(function (response) {
+      if (!response || typeof response.clone !== 'function') return response;
 
-    return nativeFetch(wpUrl, options);
+      var contentType = response.headers && response.headers.get
+        ? (response.headers.get('content-type') || '')
+        : '';
+      if (contentType.indexOf('application/json') === -1) return response;
+
+      return response.clone().json().then(function (payload) {
+        var data = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.data) ? payload.data : null);
+        if (!data) return response;
+
+        // Support common response shapes used by the existing Figma app.
+        var wrapped = Object.assign({}, payload && !Array.isArray(payload) ? payload : {}, {
+          data: data,
+          listings: data,
+          results: data,
+          success: true
+        });
+
+        return new Response(JSON.stringify(wrapped), {
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers
+        });
+      }).catch(function () {
+        return response;
+      });
+    });
   };
 })();
