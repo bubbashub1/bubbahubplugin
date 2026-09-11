@@ -51,10 +51,10 @@ class BubbaHubPlugin_Frontend_API {
                 }
             }
 
-            $city  = self::meta( $id, 'city' );
+            $city   = self::meta( $id, 'city' );
             $region = self::meta( $id, 'region' );
             $street = self::meta( $id, 'street' );
-            $zip = self::meta( $id, 'zip' );
+            $zip    = self::meta( $id, 'zip' );
             $location = implode( ', ', array_filter( array( $street, $city, $zip ) ) );
 
             $tags = self::meta( $id, 'tags' );
@@ -119,5 +119,4 @@ class BubbaHubPlugin_Frontend_API {
         ) );
     }
 }
-BubbaHubPlugin_Frontend_API::boot();
 }
