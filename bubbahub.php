@@ -3,21 +3,21 @@
  * Plugin Name: BubbaHub App
  * Plugin URI: https://bubbahub.co.uk
  * Description: BubbaHub Figma frontend with a native WordPress backend. WordPress stores listings, events and user data; Google Sheets is an import/sync source only.
- * Version: 1.3.2
+ * Version: 1.3.3
  * Author: BubbaHub
  * License: GPL-2.0+
  * Requires at least: 6.4
  * Requires PHP: 8.0
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
-if ( ! defined( 'BUBBAHUB_APP_VERSION' ) ) define( 'BUBBAHUB_APP_VERSION', '1.3.2' );
+if ( ! defined( 'BUBBAHUB_APP_VERSION' ) ) define( 'BUBBAHUB_APP_VERSION', '1.3.3' );
 if ( ! defined( 'BUBBAHUB_APP_DIR' ) ) define( 'BUBBAHUB_APP_DIR', plugin_dir_path( __FILE__ ) );
 if ( ! defined( 'BUBBAHUB_APP_URL' ) ) define( 'BUBBAHUB_APP_URL', plugin_dir_url( __FILE__ ) );
 
 require_once BUBBAHUB_APP_DIR . 'includes/class-bubbahub-backend.php';
 require_once BUBBAHUB_APP_DIR . 'includes/class-bubbahub-meta.php';
 
-// Explicit boot calls prevent the backend/meta layer from depending on file-load side effects.
+// Boot the native WordPress backend exactly once from the main plugin file.
 if ( class_exists( 'BubbaHubPlugin_Backend' ) && method_exists( 'BubbaHubPlugin_Backend', 'boot' ) ) {
     BubbaHubPlugin_Backend::boot();
 }
@@ -29,6 +29,10 @@ register_activation_hook( __FILE__, array( 'BubbaHubPlugin_Backend', 'activate' 
 register_deactivation_hook( __FILE__, array( 'BubbaHubPlugin_Backend', 'deactivate' ) );
 
 function bubbahub_app_enqueue_assets_130() {
+    static $loaded = false;
+    if ( $loaded ) return;
+    $loaded = true;
+
     $base = BUBBAHUB_APP_URL . 'assests/';
     $v = BUBBAHUB_APP_VERSION;
 
@@ -55,9 +59,16 @@ function bubbahub_app_enqueue_assets_130() {
         wp_enqueue_script( 'bubbahub-listing-card-fix', $base . 'listing-card-fix.js', array( 'bubbahub-app-js' ), $v, true );
     }
 }
-add_action( 'wp_enqueue_scripts', 'bubbahub_app_enqueue_assets_130' );
 
+// Render exactly one React mount point per page. React 19 requires a single
+// createRoot() for a given DOM container; duplicate shortcode instances can
+// otherwise cause production error #299.
 add_shortcode( 'bubbahub', function () {
+    static $rendered = false;
+    if ( $rendered ) return '';
+    $rendered = true;
+
+    bubbahub_app_enqueue_assets_130();
     return '<div id="root" style="width:100%;min-height:100vh;"></div>';
 } );
 
