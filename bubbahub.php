@@ -3,13 +3,13 @@
  * Plugin Name: BubbaHub App
  * Plugin URI: https://bubbahub.co.uk
  * Description: BubbaHub Figma frontend powered by native WordPress data.
- * Version: 1.2.1
+ * Version: 1.2.2
  * Author: BubbaHub
  * License: GPL-2.0+
  */
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-if ( ! defined( 'BUBBAHUB_APP_VERSION' ) ) define( 'BUBBAHUB_APP_VERSION', '1.2.1' );
+if ( ! defined( 'BUBBAHUB_APP_VERSION' ) ) define( 'BUBBAHUB_APP_VERSION', '1.2.2' );
 if ( ! defined( 'BUBBAHUB_APP_DIR' ) ) define( 'BUBBAHUB_APP_DIR', plugin_dir_path( __FILE__ ) );
 if ( ! defined( 'BUBBAHUB_APP_URL' ) ) define( 'BUBBAHUB_APP_URL', plugin_dir_url( __FILE__ ) );
 
@@ -137,10 +137,11 @@ add_action( 'rest_api_init', function () {
 /**
  * Deliberately uniquely named to avoid collisions with older BubbaHub plugin copies.
  */
-function bubbahub_app_enqueue_assets_121() {
+function bubbahub_app_enqueue_assets_122() {
     $base = BUBBAHUB_APP_URL . 'assests/';
     $v = BUBBAHUB_APP_VERSION;
     wp_enqueue_style( 'bubbahub-app-css', $base . 'index-CLI2PE_D.css', array(), $v );
+    wp_enqueue_style( 'bubbahub-listing-card-fix', $base . 'listing-card-fix.css', array( 'bubbahub-app-css' ), $v );
     wp_enqueue_script( 'bubbahub-app-wp-bridge', $base . 'wp-bridge.js', array(), $v, true );
     wp_localize_script( 'bubbahub-app-wp-bridge', 'BubbaHubWP', array(
         'apiUrl' => esc_url_raw( rest_url( 'bubbahub/v1/listings' ) ),
@@ -149,8 +150,9 @@ function bubbahub_app_enqueue_assets_121() {
         'nonce' => wp_create_nonce( 'wp_rest' ),
     ) );
     wp_enqueue_script( 'bubbahub-app-js', $base . 'index-CkDzJHE0.js', array( 'bubbahub-app-wp-bridge' ), $v, true );
+    wp_enqueue_script( 'bubbahub-listing-card-fix', $base . 'listing-card-fix.js', array( 'bubbahub-app-js' ), $v, true );
 }
-add_action( 'wp_enqueue_scripts', 'bubbahub_app_enqueue_assets_121' );
+add_action( 'wp_enqueue_scripts', 'bubbahub_app_enqueue_assets_122' );
 
 add_shortcode( 'bubbahub', function () {
     return '<div id="root" style="width:100%;min-height:100vh;"></div>';
