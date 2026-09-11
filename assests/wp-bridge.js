@@ -2,7 +2,7 @@
   'use strict';
 
   var config = window.BubbaHubWP || {};
-  var wpUrl = config.apiUrl;
+  var wpUrl = config.frontendListingsUrl || config.apiUrl;
   var wpNonce = config.nonce;
   var googleUrl = 'https://script.google.com/macros/s/AKfycbwL70V_m3FIoxNTuc0MiI_tdAIfMlJrt0Zw62vnefNwctEmg5Pe93UhFaWzaRl3gTv1/exec';
 
@@ -15,9 +15,6 @@
     options.credentials = 'same-origin';
     options.headers = Object.assign({}, options.headers || {});
     if (wpNonce) options.headers['X-WP-Nonce'] = wpNonce;
-    if (options.method && String(options.method).toUpperCase() === 'POST') {
-      options.headers['Content-Type'] = 'application/json';
-    }
     return options;
   }
 
@@ -32,17 +29,9 @@
 
   window.fetch = function (input, init) {
     var url = typeof input === 'string' ? input : (input && input.url) || '';
-
-    // The Figma build can append query parameters to the Apps Script URL.
-    // Match the URL prefix so those requests are also redirected to WordPress.
-    if (!isGoogleListingsRequest(url)) {
-      return nativeFetch(input, init);
-    }
+    if (!isGoogleListingsRequest(url)) return nativeFetch(input, init);
 
     var options = cloneRequestOptions(init);
-
-    // WordPress is the live source of truth. Keep the original Figma
-    // response contract so the existing UI does not need to be rebuilt.
     return nativeFetch(wpUrl, options).then(function (response) {
       if (!response || typeof response.clone !== 'function') return response;
 
@@ -54,8 +43,7 @@
       return response.clone().json().then(function (payload) {
         var data = Array.isArray(payload)
           ? payload
-          : (payload && Array.isArray(payload.data) ? payload.data : null);
-        if (!data) return response;
+          : (payload && Array.isArray(payload.data) ? payload.data : []);
 
         var wrapped = Object.assign({}, payload && !Array.isArray(payload) ? payload : {}, {
           data: data,
