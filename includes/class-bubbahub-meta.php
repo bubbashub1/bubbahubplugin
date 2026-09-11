@@ -53,5 +53,4 @@ class BubbaHubPlugin_Meta {
         }
     }
 }
-BubbaHubPlugin_Meta::boot();
 }
