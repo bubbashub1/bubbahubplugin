@@ -1,0 +1,20 @@
+<?php
+defined('ABSPATH') || exit;
+final class BHPlugin_Discovery {
+ public static function init():void { add_shortcode('bh_find_activities',[__CLASS__,'render']); }
+ public static function render():string {
+  $search=isset($_GET['bh_search'])?sanitize_text_field(wp_unslash($_GET['bh_search'])):'';
+  $filters=['bh_region'=>isset($_GET['bh_region'])?sanitize_title(wp_unslash($_GET['bh_region'])):'','bh_town'=>isset($_GET['bh_town'])?sanitize_title(wp_unslash($_GET['bh_town'])):'','bh_age'=>isset($_GET['bh_age'])?sanitize_title(wp_unslash($_GET['bh_age'])):'','bh_day'=>isset($_GET['bh_day'])?sanitize_title(wp_unslash($_GET['bh_day'])):''];
+  $args=['post_type'=>'bh_activity','post_status'=>'publish','posts_per_page'=>24,'s'=>$search]; $tax_query=['relation'=>'AND'];
+  foreach($filters as $taxonomy=>$term) if($term!=='') $tax_query[]=['taxonomy'=>$taxonomy,'field'=>'slug','terms'=>$term];
+  if(count($tax_query)>1) $args['tax_query']=$tax_query; $query=new WP_Query($args); ob_start(); ?>
+  <section class="bh-discovery" aria-labelledby="bh-discovery-title"><div class="bh-discovery__header"><h2 id="bh-discovery-title">Find the right group</h2><p>Search family-friendly groups, classes and activities.</p></div>
+  <form class="bh-discovery__filters" method="get"><label><span>Keyword</span><input type="search" name="bh_search" value="<?php echo esc_attr($search); ?>" placeholder="What are you looking for?"></label>
+  <?php foreach(['bh_region'=>'Region','bh_town'=>'Town','bh_age'=>'Age range','bh_day'=>'Day'] as $taxonomy=>$label) self::select($taxonomy,$label,$filters[$taxonomy],$taxonomy); ?>
+  <div class="bh-discovery__actions"><button class="button button-primary" type="submit">Search activities</button><a class="button" href="<?php echo esc_url(remove_query_arg(['bh_search','bh_region','bh_town','bh_age','bh_day'])); ?>">Reset</a></div></form>
+  <div class="bh-discovery__summary" aria-live="polite"><?php echo esc_html(sprintf('%d activities found',(int)$query->found_posts)); ?></div>
+  <?php if($query->have_posts()): ?><div class="bh-activity-grid"><?php while($query->have_posts()):$query->the_post(); ?><article class="bh-activity-card"><?php if(has_post_thumbnail()): ?><a href="<?php the_permalink(); ?>" class="bh-activity-card__image"><?php the_post_thumbnail('medium_large'); ?></a><?php endif; ?><div class="bh-activity-card__body"><h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3><?php if(has_excerpt()): ?><p><?php echo esc_html(get_the_excerpt()); ?></p><?php endif; ?></div></article><?php endwhile; ?></div><?php else: ?><p class="bh-no-results">No activities matched those filters.</p><?php endif; ?></section>
+  <?php wp_reset_postdata(); return (string)ob_get_clean();
+ }
+ private static function select(string $name,string $label,string $selected,string $taxonomy):void { $terms=get_terms(['taxonomy'=>$taxonomy,'hide_empty'=>false]); if(is_wp_error($terms)) return; ?><label><span><?php echo esc_html($label); ?></span><select name="<?php echo esc_attr($name); ?>"><option value="">All</option><?php foreach($terms as $term): ?><option value="<?php echo esc_attr($term->slug); ?>" <?php selected($selected,$term->slug); ?>><?php echo esc_html($term->name); ?></option><?php endforeach; ?></select></label><?php }
+}
