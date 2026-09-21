@@ -8,6 +8,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! class_exists( 'BubbaHubPlugin_Frontend_API' ) ) {
 class BubbaHubPlugin_Frontend_API {
     public static function boot() {
+        static $booted = false;
+        if ( $booted ) return;
+        $booted = true;
         add_action( 'rest_api_init', array( __CLASS__, 'register' ) );
     }
 
