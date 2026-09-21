@@ -11,7 +11,12 @@ final class BH_Core {
         add_action('init', [self::class, 'register_content']);
         add_action('init', [self::class, 'register_taxonomies']);
         add_action('rest_api_init', [self::class, 'register_rest']);
+
+        // Register shortcodes immediately so they are available to WordPress
+        // during page rendering, including builders and cached page output.
         add_shortcode('bubba_hub', [self::class, 'shortcode']);
+        add_shortcode('bubbahub', [self::class, 'shortcode']);
+
         add_action('wp_enqueue_scripts', [self::class, 'assets']);
     }
 
@@ -86,8 +91,19 @@ final class BH_Core {
         ]);
     }
 
-    public static function shortcode(): string {
-        return '<div class="bh-app" data-bh-app="1"><div class="bh-app__header"><h2>Find your perfect group</h2><p>Discover family activities, groups and classes near you.</p></div><div id="bh-find-app"></div></div>';
+    public static function shortcode($atts = [], $content = null, $tag = ''): string {
+        $atts = shortcode_atts([
+            'title' => 'Find your perfect group',
+            'description' => 'Discover family activities, groups and classes near you.',
+        ], (array) $atts, $tag ?: 'bubba_hub');
+
+        return '<div class="bh-app" data-bh-app="1">'
+            . '<div class="bh-app__header">'
+            . '<h2>' . esc_html($atts['title']) . '</h2>'
+            . '<p>' . esc_html($atts['description']) . '</p>'
+            . '</div>'
+            . '<div id="bh-find-app"></div>'
+            . '</div>';
     }
 
     public static function assets(): void {
