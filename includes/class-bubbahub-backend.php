@@ -15,6 +15,9 @@ class BubbaHubPlugin_Backend {
     const TERM_URL = 'https://script.google.com/macros/s/AKfycbzxEfyvcyb9oJ25nvWgrJqRuuvoh5tWoTp5uS1j1R8SUFJgNSVauawY35cVaWo6LBSH/exec';
 
     public static function boot() {
+        static $booted = false;
+        if ( $booted ) return;
+        $booted = true;
         add_action( 'init', array( __CLASS__, 'register_types' ) );
         add_action( 'rest_api_init', array( __CLASS__, 'register_rest' ) );
         add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ), 30 );
@@ -123,5 +126,4 @@ class BubbaHubPlugin_Backend {
     public static function rest_me(){ $u=wp_get_current_user();return rest_ensure_response(array('user'=>array('id'=>$u->ID,'name'=>$u->display_name,'email'=>$u->user_email,'roles'=>$u->roles,'type'=>get_user_meta($u->ID,'bubbahub_user_type',true),'plan'=>get_user_meta($u->ID,'bubbahub_plan_id',true)))); }
     public static function rest_profile($r){$uid=get_current_user_id();if($r->get_method()==='POST'){foreach(array('location','lat','lng','due_date','interests') as$k)if($r->get_param($k)!==null)update_user_meta($uid,'bubbahub_'.$k,is_array($r->get_param($k))?$r->get_param($k):sanitize_text_field($r->get_param($k)));}return rest_ensure_response(array('location'=>get_user_meta($uid,'bubbahub_location',true),'lat'=>get_user_meta($uid,'bubbahub_lat',true),'lng'=>get_user_meta($uid,'bubbahub_lng',true),'due_date'=>get_user_meta($uid,'bubbahub_due_date',true),'interests'=>get_user_meta($uid,'bubbahub_interests',true)));}
 }
-BubbaHubPlugin_Backend::boot();
 }
