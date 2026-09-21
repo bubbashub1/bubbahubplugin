@@ -16,6 +16,12 @@ define('BHPLUGIN_URL',plugin_dir_url(__FILE__));
 require_once BHPLUGIN_DIR.'includes/class-bhplugin-dependencies.php';
 require_once BHPLUGIN_DIR.'includes/class-bhplugin-core.php';
 require_once BHPLUGIN_DIR.'includes/class-bhplugin-discovery.php';
-add_action('plugins_loaded',static function(){BHPlugin_Dependencies::init();BHPlugin_Core::init();BHPlugin_Discovery::init();});
+require_once BHPLUGIN_DIR.'includes/class-bhplugin-my-hub.php';
+add_action('plugins_loaded',static function(){
+ BHPlugin_Dependencies::init();
+ BHPlugin_Core::init();
+ BHPlugin_Discovery::init();
+ BHPlugin_My_Hub::init();
+});
 register_activation_hook(BHPLUGIN_FILE,['BHPlugin_Core','activate']);
 register_deactivation_hook(BHPLUGIN_FILE,['BHPlugin_Core','deactivate']);
