@@ -3,6 +3,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 if ( ! class_exists( 'BubbaHubPlugin_Meta' ) ) {
 class BubbaHubPlugin_Meta {
     public static function boot() {
+        static $booted = false;
+        if ( $booted ) return;
+        $booted = true;
         add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_box' ) );
         add_action( 'save_post_bh_group', array( __CLASS__, 'save' ), 10, 2 );
         add_action( 'init', array( __CLASS__, 'register_meta' ) );
