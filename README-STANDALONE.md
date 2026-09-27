@@ -1,27 +1,108 @@
-# Bubba Hub Standalone System
+# Bubba Hub Standalone MySQL System
 
-This branch is the new non-WordPress application layer for the Bubba Hub beta website.
+This branch is the new standalone application layer for the Bubba Hub beta site.
 
-Architecture: HTML/CSS/JavaScript frontend -> PHP JSON API -> MySQL.
+**Architecture**
 
-There is no WordPress, ACF, WordPress REST API or WordPress database dependency.
+`Beta HTML/CSS/JS → PHP JSON API → MySQL`
 
-API location: https://bubbahub.co.uk/beta/api/
+There is no WordPress, ACF, WP REST API or WP database dependency.
 
-Endpoints:
-GET /beta/api/
-GET /beta/api/activities
+## 1. Database
 
-Activity filters: search, location, category, age_min, age_max, price_max, day, page, per_page.
+Import:
 
-Installation:
-1. Create a MySQL database and user.
-2. Import database/schema.sql.
-3. Copy api/config.example.php to api/config.php and enter the database credentials.
-4. Upload api to the server.
-5. Keep config.php out of Git.
-6. Point the beta site's JavaScript requests at /beta/api/activities.
+`database/schema.sql`
 
-Never put MySQL credentials in browser JavaScript.
+Then create `api/config.php` from `api/config.example.php` and enter the real MySQL credentials.
 
-The existing WordPress files on main are not used by this standalone build.
+**Never commit `api/config.php` to GitHub.**
+
+## 2. API location
+
+When the `api` folder is uploaded into the beta website:
+
+`https://bubbahub.co.uk/beta/api/`
+
+Health check:
+
+`https://bubbahub.co.uk/beta/api/health`
+
+Activities:
+
+`https://bubbahub.co.uk/beta/api/activities`
+
+The API .htaccess routes requests such as `/activities?search=baby` to the PHP router.
+
+## 3. Connect the beta HTML
+
+Load the scripts in this order before the closing `</body>` tag:
+
+```html
+<script src="/beta/assets/js/bh-config.example.js"></script>
+<script src="/beta/assets/js/bh-api.js"></script>
+<script src="/beta/assets/js/bh-find.js"></script>
+```
+
+If the beta files are stored elsewhere, change the paths only; the API base remains:
+
+```js
+window.BubbaHubConfig = { apiBase: '/beta/api' };
+```
+
+The activity finder uses:
+
+- `search`
+- `location`
+- `category`
+- `age_min`
+- `age_max`
+- `price_max`
+- `day`
+
+The existing finder mount is:
+
+```html
+<div id="bh-find-app"></div>
+```
+
+## 4. API client
+
+`assets/js/bh-api.js` exposes:
+
+```js
+BubbaHubAPI.activities(filters)
+BubbaHubAPI.get(path)
+```
+
+No database username or password is ever sent to the browser.
+
+## 5. Current API
+
+### GET /activities
+
+Supports pagination and filters and returns activity records plus pagination metadata.
+
+### POST /activities
+
+Creates an activity from JSON. This is intended for the future admin/provider interface.
+
+## 6. Deployment
+
+GitHub stores the code. The PHP API and MySQL database must run on the hosting server.
+
+Upload the `api` directory to:
+
+`/beta/api/`
+
+Create the private `api/config.php` on the server.
+
+Then load the beta page and test:
+
+1. `/beta/api/health`
+2. `/beta/api/activities`
+3. Search/filter the activity finder.
+
+## Important
+
+The old WordPress files remain in the repository only as historical material. The standalone branch does not use them.
