@@ -1,0 +1,11 @@
+CREATE DATABASE IF NOT EXISTS bubbahub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE bubbahub;
+CREATE TABLE IF NOT EXISTS activities (
+ id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,name VARCHAR(255) NOT NULL,slug VARCHAR(255) NOT NULL,description TEXT NULL,image_url TEXT NULL,address VARCHAR(255) NULL,town VARCHAR(120) NULL,region VARCHAR(120) NULL,postcode VARCHAR(20) NULL,latitude DECIMAL(10,7) NULL,longitude DECIMAL(10,7) NULL,category VARCHAR(120) NULL,age_min DECIMAL(4,1) NULL,age_max DECIMAL(4,1) NULL,price DECIMAL(10,2) NULL,price_label VARCHAR(120) NULL,session_length VARCHAR(120) NULL,website_url TEXT NULL,booking_url TEXT NULL,featured TINYINT(1) NOT NULL DEFAULT 0,status ENUM('draft','published','archived') NOT NULL DEFAULT 'draft',created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY uq_activities_slug(slug),KEY idx_status(status),KEY idx_town(town),KEY idx_category(category),KEY idx_age(age_min,age_max),KEY idx_location(latitude,longitude)
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS activity_days (
+ id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,activity_id BIGINT UNSIGNED NOT NULL,day_name VARCHAR(20) NOT NULL,day_order TINYINT UNSIGNED NOT NULL DEFAULT 0,PRIMARY KEY(id),UNIQUE KEY uq_activity_day(activity_id,day_name),CONSTRAINT fk_activity_days_activity FOREIGN KEY(activity_id) REFERENCES activities(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS users (
+ id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,email VARCHAR(255) NOT NULL,password_hash VARCHAR(255) NOT NULL,first_name VARCHAR(100) NULL,last_name VARCHAR(100) NULL,role ENUM('family','leader','admin') NOT NULL DEFAULT 'family',status ENUM('active','pending','suspended') NOT NULL DEFAULT 'pending',created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,PRIMARY KEY(id),UNIQUE KEY uq_users_email(email)
+) ENGINE=InnoDB;
